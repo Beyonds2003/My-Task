@@ -1,11 +1,14 @@
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, View, TouchableOpacity } from 'react-native'
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, View, TouchableOpacity, FlatList, Platform, Image } from 'react-native'
 import React from 'react'
 import GlobalStyle from './GlobalStyle'
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 import TaskCard from './TaskCard'
 import SQLite from 'react-native-sqlite-storage'
-import { useIsFocused } from '@react-navigation/native'
+import { ThemeProvider, useIsFocused } from '@react-navigation/native'
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
+import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated'
+import PushNotification from "react-native-push-notification";
 
 const db = SQLite.openDatabase({
   name: "MyTaskDb",
@@ -25,13 +28,14 @@ const HomeTask = ({navigation}) => {
   ]
 
   const [tasks, setTasks] = React.useState([])
+  const [taskLength, setTaskLength] = React.useState(tasks.length)
   const isFocused = useIsFocused()
 
   const createTable = () => {
     db.transaction((tx) => {
       tx.executeSql('CREATE TABLE IF NOT EXISTS tasks (ID INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, category TEXT, color TEXT, startDate TEXT, endDate TEXT, description TEXT, complete BOOLEAN)', 
       [],
-      () => {console.log('create table successfully')},
+      () => {console.log()},
       error => {console.log(error)})
     })
   }
@@ -41,7 +45,6 @@ const HomeTask = ({navigation}) => {
       tx.executeSql(`SELECT * FROM tasks ORDER BY ID DESC`, 
       [],
       (tx, results) => {
-        console.log("get data")
         let items = []
         if (results.rows.length === 0) {
           return setTasks(items)
@@ -49,6 +52,7 @@ const HomeTask = ({navigation}) => {
           for (let i = 0; i < results.rows.length; i++) {
             items.push(results.rows.item(i))
           }
+          setTaskLength(items.length)
           return setTasks(items)
         }
       },
@@ -61,14 +65,22 @@ const HomeTask = ({navigation}) => {
     db.transaction((tx) => {
       tx.executeSql('DROP TABLE tasks', 
       [],
-      () => console.log('delete table')
+      () => console.log()
       )
+    })
+  }
+
+  const createNotificationChannel = () => {
+    PushNotification.createChannel({
+      channelId: "mytask",
+      channelName: "My Task"
     })
   }
  
   React.useEffect(() => {
     try {
       createTable()
+      createNotificationChannel()
     } catch (error) {
       console.log(error)
     }
@@ -80,17 +92,16 @@ const HomeTask = ({navigation}) => {
       // deleteData() 
     } catch (error) {
       console.log(error)
-    }
-  }, [])
-
+    } 
+  }, [isFocused]) 
 
   return (
-    <ScrollView style={{backgroundColor: "rgb(250, 250, 250)"}}>
-        <View style={styles.body}>
+    <ScrollView style={styles.body}>
+        <View>
           <StatusBar  barStyle={'dark-content'} backgroundColor='white'/>
           <View style={styles.cardContainer}>
               {cards.map(card => (
-                <TouchableOpacity key={card.id} activeOpacity={0.8} onPress={() => navigation.navigate(card.text)}>
+                <TouchableOpacity style={{width: '45%', height: '45%', margin: 5}} key={card.id} activeOpacity={0.8} onPress={() => navigation.navigate(card.text)}>
                     <View style={[{backgroundColor: card.wallpaper}, styles.card]}>
                         <View style={styles.materialIcon}><MaterialCommunityIcons name={card.icon} size={23} color={GlobalStyle.cardColor.color} /></View>
                         <Text style={styles.cardText}>{card.text}</Text>
@@ -103,22 +114,31 @@ const HomeTask = ({navigation}) => {
                 </TouchableOpacity>
               ))} 
           </View>
-          <View style={styles.titleContainer}>
-            <View style={{display: "flex", flexDirection: 'row', alignItems: "center"}}>
-              <Text style={styles.title}>Add Text</Text>
-              <View style={styles.add}><FontAwesome5Icon name={'plus'} color="white"  size={11}/></View>
-            </View>
-            <View style={{display: "flex", flexDirection: 'row'}}>
-              <Text style={[styles.text, {fontSize: 15, marginRight: 7}]}>All Tests</Text>
-              <View style={{justifyContent: "flex-end", marginTop: 1}}><FontAwesome5Icon name='angle-down' size={19} color={"#6d6d6d"} /></View>
-            </View>
-          </View>
           <View>
-          {tasks.map((data) => (
-            <TaskCard key={data.ID} tasks={data} success={false} fail={false}  />
-          ))}
+          <View style={styles.titleContainer}>
+            <TouchableOpacity style={{display: "flex", flexDirection: 'row', alignItems: "center"}} activeOpacity={0.7} onPress={() => navigation.navigate('Create task')}>
+              <Text style={styles.title}>Add Task</Text>
+              <View style={styles.add}><FontAwesome5Icon name={'plus'} color="white"  size={11}/></View>
+            </TouchableOpacity>
+            <View style={{display: "flex", flexDirection: 'row'}}>
+              <Text style={[styles.text, {fontSize: 15, marginRight: 7}]}>{`Total Tasks: ${taskLength}`}</Text>
+              {/* <View style={{justifyContent: "flex-end", marginTop: 1}}><FontAwesome5Icon name='angle-down' size={19} color={"#6d6d6d"} /></View> */}
+            </View>
           </View>
         </View>
+          {tasks.length <= 0 ? 
+          <View style={{justifyContent: "center", alignItems: 'center',flex: 1}}>
+            {/* <Image source={require('../assets/image/notebook.png')} style={{width: 300, height: 190, marginTop: 40}} />
+            <Text style={styles.text}>No Task To Do</Text> */}
+          </View> :
+          <View>
+            {tasks.map(data => (
+              <Animated.View  key={data.ID}>
+                <TaskCard tasks={data} success={data.complete ? true : false} fail={false} navigation={navigation} setTaskLength={setTaskLength} />
+              </Animated.View>
+            ))}
+          </View>}
+          </View>
     </ScrollView>
   )
 }
@@ -138,16 +158,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: "center",
-        paddingTop: 40,
+        paddingTop: 10,
         backgroundColor: "white",
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
-        paddingBottom: 10
+        paddingBottom: 10, 
+        width: '100%',
+        height: Dimensions.get('window').height / 2.5,
       },
       card: {
-        width: Dimensions.get('window').width * 180 /  Dimensions.get('window').width,
-        height: Dimensions.get('window').height * 130 /  Dimensions.get('window').height,
-        margin: 5,
+        width: '100%',
+        height: '100%',
         justifyContent: "center",
         alignItems: "center",
         borderRadius: 30,
@@ -198,7 +219,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 15,
         right: 20
-      }
+      },
 })
 
 export default HomeTask

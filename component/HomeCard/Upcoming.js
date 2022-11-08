@@ -1,8 +1,9 @@
-import { StyleSheet, Text, View, FlatList } from 'react-native'
+import { StyleSheet, Text, View, FlatList, SafeAreaView, StatusBar } from 'react-native'
 import React from 'react'
 import SQLite from 'react-native-sqlite-storage'
 import { format } from 'date-fns'
 import TaskCard from '../TaskCard'
+import HomeHeader from './HomeHeader'
 
 const db = SQLite.openDatabase({
   name: "MyTaskDb",
@@ -12,13 +13,13 @@ const db = SQLite.openDatabase({
 error => {console.log(error)}
 )
 
-const Upcoming = () => {
+const Upcoming = ({navigation}) => {
 
   const [tasks, setTasks] = React.useState([])
 
   const getUpcomingTask = () => {
     db.transaction((tx) => {
-      tx.executeSql("SELECT * FROM tasks WHERE date(startDate) > date('now')", 
+      tx.executeSql("SELECT * FROM tasks WHERE date(startDate) > date('now') OR date(endDate) > date('now')", 
       [],
       (tx, results) => {
         let items = []
@@ -41,20 +42,23 @@ const Upcoming = () => {
   }, [])
 
   return (
-    <View style={styles.body}>
-      {/* <View style={styles.textContainer}>
-        <Text style={styles.text}>Today Tasks</Text>
-      </View> */}
-      <FlatList 
-       data={tasks}
-       renderItem={({item}) => (
-        <View style={styles.container}>
-          <TaskCard tasks={item} success={false} fail={false}/>
-        </View>
-       )}
-       keyExtractor={(index, ID) => ID}
-      />
-    </View>
+    <SafeAreaView style={{flex: 1}}>
+      <StatusBar barStyle={'light-content'} backgroundColor='orange' />
+      <View style={styles.body}>
+        <FlatList 
+        data={tasks}
+        ListHeaderComponent={() => (
+          <HomeHeader color={'orange'} text={"Upcoming"} taskCount={tasks.length} navigation={navigation} />
+        )}
+        renderItem={({item}) => (
+          <View style={styles.container}>
+            <TaskCard tasks={item} success={false} fail={false} navigation={navigation}/>
+          </View>
+        )}
+        keyExtractor={(index, ID) => ID}
+        />
+      </View>
+    </SafeAreaView>
   )
 }
 
@@ -64,12 +68,16 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     padding: 10,
-    paddingLeft: 3,
-    paddingRight: 3,
-    backgroundColor: 'white'
+    paddingLeft: 0,
+    paddingRight: 0,
+    backgroundColor: 'white',
+    paddingTop: 0
   },
   container: {
     width: '100%',
+    marginLeft: 0,
+    marginRight: 0,
+    marginTop: 10
   },
   text: {
     color: GlobalStyle.fontColor.color,

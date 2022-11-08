@@ -1,4 +1,4 @@
-package com.mytest;
+package com.mytask;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

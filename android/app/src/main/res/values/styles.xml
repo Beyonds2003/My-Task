@@ -4,12 +4,15 @@
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <item name="colorAccent">#312dff</item>
     </style>
 
     <style name="DatePickerTheme" parent="DatePickerBaseTheme">
         <item name="android:colorControlNormal">#3a6bff</item>
-        <item name="colorAccent">#312dff</item>
+        <item name="colorAccent">#FFFFFF</item>
+        <item name="android:textColor">#FFFFFF</item>
+<!--        <item name="android:textColorPrimary">#FFFFFF</item>-->
+<!--        <item name="android:datePickerDialogTheme">'#FFFFFF'</item>-->
+<!--        <item name="android:timePickerDialogTheme">'#FFFFFF'</item>-->
     </style>
 
 </resources>

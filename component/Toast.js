@@ -1,21 +1,21 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StatusBar, StyleSheet, Text, View } from 'react-native'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import React from 'react'
 
-const Toast = ({theme}) => {
+const Toast = ({theme, text}) => {
   return (
-      <View style={{position: 'relative'}}> 
+      <View style={{position: 'relative'}}>
         <View style={styles.toast}>
-          <View style={[styles.leftColor, {backgroundColor: theme}]} />
+          <View style={[styles.leftColor, {backgroundColor: theme ? '#2DB83D' : "#E10600"}]} />
           <View style={styles.toastTextContainer}>
               <View style={{alignItems: "center"}}>
-                <View style={[styles.toastIconContainer, {borderColor: `${theme}`}]}>
-                    <MaterialCommunityIcon name="check" size={16} color={theme} />
+                <View style={[styles.toastIconContainer, {borderColor: `${theme ? '#2DB83D' : "#E10600"}`}]}>
+                    <MaterialCommunityIcon name="check" size={16} color={theme ? '#2DB83D' : "#E10600"} />
                 </View>
               </View>
             <View style={{display: 'flex'}}>
-              <Text style={[styles.toastMessage, {marginBottom: 2, fontFamily: 'Roboto-Medium', fontSize: 17}]}>Success</Text>
-              <Text style={styles.toastMessage}>Create Task Successfully</Text>
+              <Text style={[styles.toastMessage, {marginBottom: 2, fontFamily: 'Roboto-Medium', fontSize: 17}]}>{theme ? 'Success' : 'Error'}</Text>
+              <Text style={styles.toastMessage}>{text}</Text>
             </View>
           </View>
         </View>
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
       },
 
       toast: {
-        width: 300,
+        minWidth: 300,
         backgroundColor: 'white',
         borderRadius: 2,
         padding: 10,

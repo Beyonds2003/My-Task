@@ -3,7 +3,6 @@ import React from 'react'
 
 const Category = ({item, category, setCategory, handleCategoryPress}) => {
 
-
   return (
     <TouchableOpacity activeOpacity={0.7} onPress={() => handleCategoryPress(item)}>
         <View style={[styles.chip, {backgroundColor: item.color, borderWidth: item.click ? 1.5 : 0, borderColor: '#2d87fc'}]}>
@@ -41,7 +40,7 @@ const styles = StyleSheet.create({
     },
     image: {
       width: 25,
-      height: 15,
+      height: 25,
       marginRight: 5
     }
 })
